@@ -55,7 +55,6 @@ routes.g.dart
 # iOS
 # ==============================
 ios/Flutter/Release.xcconfig
-ios/Podfile
 
 # ===========================
 /lib/presentation/navigation/routes.g.dart

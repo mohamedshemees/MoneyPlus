@@ -10,8 +10,13 @@ class TransactionCubit extends Cubit<TransactionState> {
   TransactionCubit({required this.transactionRepository})
     : super(TransactionState.initial());
 
-  void loadData() async {
-    emit(state.copyWith(status: TransactionStatus.loading));
+  void loadData({List<int>? initialCategories}) async {
+    emit(state.copyWith(
+      status: TransactionStatus.loading,
+      selectedCategories: initialCategories,
+      selectedTab: initialCategories==null?
+          null:TransactionTabs.expenses
+    ));
 
     final now = DateTime.now();
     try {
@@ -20,6 +25,7 @@ class TransactionCubit extends Cubit<TransactionState> {
       final result = await transactionRepository.getTransactions(
         page: 1,
         date: now,
+        categoriesId: initialCategories?? List.empty(),
       );
 
       categories.when(
@@ -130,6 +136,37 @@ class TransactionCubit extends Cubit<TransactionState> {
         tab: state.selectedTab,
         year: year,
         month: month,
+        selectedCategories: state.selectedCategories,
+      );
+
+      emit(
+        state.copyWith(
+          status: TransactionStatus.success,
+          transactions: result,
+          currentPage: 1,
+          hasMore: result.length == 20,
+        ),
+      );
+    } catch (_) {
+      emit(state.copyWith(status: TransactionStatus.failure));
+    }
+  }
+
+  void refresh() async {
+    emit(
+      state.copyWith(
+        status: TransactionStatus.loading,
+        currentPage: 1,
+        hasMore: true,
+      ),
+    );
+
+    try {
+      final result = await _getTransaction(
+        page: 1,
+        tab: state.selectedTab,
+        year: state.selectedYear,
+        month: state.selectedMonth,
         selectedCategories: state.selectedCategories,
       );
 

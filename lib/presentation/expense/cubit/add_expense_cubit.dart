@@ -50,10 +50,9 @@ class AddExpenseCubit extends Cubit<AddExpenseState> {
 
   Future<void> _loadCurrency() async {
     try {
-    emit(state.copyWith(status: FormStatus.loading));
       final currency = await _userMoneyRepository.getCurrency();
 
-      emit(state.copyWith(currency: currency, status: FormStatus.initial));
+      emit(state.copyWith(currency: currency));
     } catch (e) {
       emit(
         state.copyWith(
@@ -91,7 +90,7 @@ class AddExpenseCubit extends Cubit<AddExpenseState> {
 
     emit(state.copyWith(status: FormStatus.loading));
     try {
-      final result = await _transactionRepository.addTransaction(
+      final result = await _transactionRepository.upsertTransaction(
         amount: state.amount!,
         type: TransactionType.expense,
         date: state.date,

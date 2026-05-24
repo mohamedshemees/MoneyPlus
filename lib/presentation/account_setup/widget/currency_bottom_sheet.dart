@@ -1,28 +1,35 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:moneyplus/design_system/assets/app_assets.dart';
 import 'package:moneyplus/design_system/theme/money_extension_context.dart';
 import 'package:moneyplus/design_system/widgets/text_field.dart';
+import 'package:moneyplus/design_system/widgets/app_loading_indicator.dart';
+import 'package:moneyplus/domain/entity/currency.dart';
 
-import '../../../core/l10n/app_localizations.dart';
-import '../../../design_system/widgets/buttons/button/default_button.dart';
-import '../cubit/account_setup_cubit.dart';
-import '../cubit/account_setup_state.dart';
+import '../../../../core/l10n/app_localizations.dart';
+import '../../../../design_system/widgets/buttons/button/default_button.dart';
 import 'currency_list.dart';
 
 class CurrencyBottomSheet extends StatefulWidget {
-  final AccountSetupState state;
+  final List<Currency> currencies;
+  final bool isLoading;
+  final String query;
+  final Function(String) onSearchChanged;
 
-  const CurrencyBottomSheet({super.key, required this.state});
+  const CurrencyBottomSheet({
+    super.key,
+    required this.currencies,
+    required this.isLoading,
+    required this.query,
+    required this.onSearchChanged,
+  });
 
   @override
   State<CurrencyBottomSheet> createState() => _CurrencyBottomSheetState();
 }
 
 class _CurrencyBottomSheetState extends State<CurrencyBottomSheet> {
-  final TextEditingController searchController = TextEditingController();
-  String? selectedCurrency;
+  Currency? selectedCurrency;
 
   @override
   Widget build(BuildContext context) {
@@ -44,21 +51,29 @@ class _CurrencyBottomSheetState extends State<CurrencyBottomSheet> {
               ),
               GestureDetector(
                 onTap: () {
-                  Navigator.pop(context, selectedCurrency);
+                  Navigator.pop(context);
                 },
                 child: SvgPicture.asset(
                   AppAssets.iconCancel,
                   height: 20,
                   width: 20,
+                  colorFilter: ColorFilter.mode(
+                    context.colors.body,
+                    BlendMode.srcIn,
+                  ),
                 ),
               ),
             ],
           ),
         ),
-        SizedBox(height: 12),
+        const SizedBox(height: 12),
         Padding(
           padding: const EdgeInsetsDirectional.symmetric(horizontal: 16),
-          child: Divider(color: context.colors.stroke, thickness: 1, height: 1),
+          child: Divider(
+            color: context.colors.stroke,
+            thickness: 1,
+            height: 1,
+          ),
         ),
         Padding(
           padding: const EdgeInsetsDirectional.symmetric(
@@ -67,10 +82,8 @@ class _CurrencyBottomSheetState extends State<CurrencyBottomSheet> {
           ),
           child: MTextField(
             hint: l10n.search,
-            value: widget.state.query,
-            onChanged: (value) {
-              context.read<AccountSetupCubit>().onCurrencyChanged(value);
-            },
+            value: widget.query,
+            onChanged: widget.onSearchChanged,
             leading: Padding(
               padding: const EdgeInsetsDirectional.only(
                 top: 14,
@@ -82,20 +95,18 @@ class _CurrencyBottomSheetState extends State<CurrencyBottomSheet> {
           ),
         ),
         Expanded(
-          child: widget.state.isLoading
-              ? Center(child: CircularProgressIndicator(color: context.colors.primary,))
+          child: widget.isLoading
+              ? const AppLoadingIndicator()
               : ListView.separated(
-                  itemCount: widget.state.currencies.length,
+                  itemCount: widget.currencies.length,
                   padding: EdgeInsets.zero,
                   itemBuilder: (BuildContext context, int index) {
-                    final currencyList = widget.state.currencies[index];
-                    final isSelected =
-                        selectedCurrency ==
-                        "${currencyList.name}-${currencyList.abbreviation}";
+                    final currency = widget.currencies[index];
+                    final isSelected = selectedCurrency?.id == currency.id;
 
                     return CurrencyList(
                       trailing: Text(
-                        currencyList.abbreviation,
+                        currency.abbreviation,
                         style: context.typography.label.medium.copyWith(
                           color: isSelected
                               ? context.colors.primary
@@ -110,8 +121,7 @@ class _CurrencyBottomSheetState extends State<CurrencyBottomSheet> {
                       ),
                       onTap: () {
                         setState(() {
-                          selectedCurrency =
-                              "${currencyList.name}-${currencyList.abbreviation}";
+                          selectedCurrency = currency;
                         });
                       },
                       subtitleTextStyle: context.typography.label.small
@@ -120,13 +130,14 @@ class _CurrencyBottomSheetState extends State<CurrencyBottomSheet> {
                                 ? context.colors.primary
                                 : context.colors.body,
                           ),
-                      titleTextStyle: context.typography.label.medium.copyWith(
-                        color: isSelected
-                            ? context.colors.primary
-                            : context.colors.title,
-                      ),
-                      title: currencyList.name,
-                      subtitle: currencyList.country,
+                      titleTextStyle: context.typography.label.medium
+                          .copyWith(
+                            color: isSelected
+                                ? context.colors.primary
+                                : context.colors.title,
+                          ),
+                      title: currency.name,
+                      subtitle: currency.country,
                       leading: isSelected
                           ? SvgPicture.asset(AppAssets.playArrow)
                           : null,
@@ -148,12 +159,15 @@ class _CurrencyBottomSheetState extends State<CurrencyBottomSheet> {
         ),
         Padding(
           padding: const EdgeInsetsDirectional.all(16),
-          child: DefaultButton(
-            text: l10n.select,
-            isEnabled: selectedCurrency != null,
-            onPressed: () {
-              Navigator.pop(context, selectedCurrency);
-            },
+          child: SafeArea(
+            top: false,
+            child: DefaultButton(
+              text: l10n.select,
+              isEnabled: selectedCurrency != null,
+              onPressed: () {
+                Navigator.pop(context, selectedCurrency);
+              },
+            ),
           ),
         ),
       ],

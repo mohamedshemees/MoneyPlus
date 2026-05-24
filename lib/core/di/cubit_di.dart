@@ -1,3 +1,7 @@
+import 'package:moneyplus/presentation/account/cubit/currency_selection_cubit.dart';
+import 'package:moneyplus/domain/entity/transaction_type.dart';
+import 'package:moneyplus/presentation/currency/cubit/currency_rates_cubit.dart';
+import 'package:moneyplus/presentation/manage_transaction/cubit/manage_transaction_cubit.dart';
 import 'package:moneyplus/domain/repository/account_repository.dart';
 import 'package:moneyplus/domain/repository/authentication_repository.dart';
 import 'package:moneyplus/domain/repository/statistics_repository.dart';
@@ -38,7 +42,10 @@ void initCubitDI() {
   );
 
   getIt.registerFactory<AccountSetupCubit>(
-    () => AccountSetupCubit(getIt<AccountRepository>()),
+    () => AccountSetupCubit(
+      getIt<AccountRepository>(),
+      getIt<AuthenticationRepository>(),
+    ),
   );
 
   getIt.registerFactory<AddExpenseCubit>(
@@ -72,9 +79,7 @@ void initCubitDI() {
 
   getIt.registerFactory<CreateAccountCubit>(
     () => CreateAccountCubit(
-      getIt<AuthenticationValidator>(),
-      getIt<AuthenticationRepository>(),
-    ),
+      getIt<AuthenticationValidator>(),),
   );
 
   getIt.registerFactory<ProfileSettingsCubit>(
@@ -89,10 +94,32 @@ void initCubitDI() {
     () => AccountCubit(getIt<AccountRepository>(), getIt<AuthenticationRepository>()),
   );
 
+  getIt.registerFactory<CurrencySelectionCubit>(
+    () => CurrencySelectionCubit(getIt<AccountRepository>()),
+  );
+
   getIt.registerFactory<CategoriesCubit>(
     () => CategoriesCubit(getIt<CategoryRepository>()),
 );
   getIt.registerFactory<SalarySettingsCubit>(
     () => SalarySettingsCubit(userMoneyRepository: getIt<UserMoneyRepository>()),
+  );
+
+  getIt.registerFactory<CurrencyRatesCubit>(
+    () => CurrencyRatesCubit(
+      transactionRepository: getIt<TransactionRepository>(),
+      userMoneyRepository: getIt<UserMoneyRepository>(),
+      accountRepository: getIt<AccountRepository>(),
+    ),
+  );
+
+  getIt.registerFactoryParam<ManageTransactionCubit, TransactionType, String?>(
+    (type, id) => ManageTransactionCubit(
+      transactionRepository: getIt<TransactionRepository>(),
+      userMoneyRepository: getIt<UserMoneyRepository>(),
+      accountRepository: getIt<AccountRepository>(),
+      initialType: type,
+      transactionId: id,
+    ),
   );
 }

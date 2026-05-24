@@ -23,7 +23,7 @@ jobs:
           cache: true
 
       - name: Cache pub dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ${{ env.PUB_CACHE }}
@@ -47,7 +47,10 @@ jobs:
         run: flutter pub get
 
       - name: Generate local code
-        run: flutter pub run build_runner build --delete-conflicting-outputs
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Create secrets.env
+        run: echo "${{ secrets.SECRETS_ENV_BASE64 }}" | base64 --decode > secrets.env
 
       - name: Generate Firebase Options
         env:
@@ -61,6 +64,9 @@ jobs:
             --out=lib/firebase_options.dart \
             --token=$FIREBASE_TOKEN \
             --ios-bundle-id=com.pennypilot.moneyplus
+
+      - name: Pre-create FlutterFire iOS environment directory
+        run: mkdir -p .dart_tool/flutterfire/platforms/ios/default
 
       - name: Build iOS (simulator)
         run: flutter build ios --simulator --no-codesign

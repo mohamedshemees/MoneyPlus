@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:moneyplus/domain/entity/transaction_type.dart';
+import 'package:moneyplus/presentation/manage_transaction/screen/add_transaction_screen.dart';
+import 'package:moneyplus/presentation/manage_transaction/screen/edit_transaction_screen.dart';
+import 'package:moneyplus/presentation/account_setup/screen/account_setup_screen.dart';
 import 'package:moneyplus/presentation/createAccount/screen/create_account_screen.dart';
 import 'package:moneyplus/presentation/edit_salary/salary_settings_screen.dart';
-import 'package:moneyplus/presentation/expense/screen/add_expense_screen.dart';
 import 'package:moneyplus/presentation/login/screen/login_screen.dart';
 import 'package:moneyplus/presentation/update_password/screen/update_password_screen.dart';
 
 import '../../core/di/injection.dart';
 import '../categories/screen/manage_categories_screen.dart';
 import '../forget_password/screen/forget_password_screen.dart';
-import '../income/screen/add_income_screen.dart';
 import '../login/cubit/login_cubit.dart';
 import '../main_container/screen/main_screen.dart';
 import '../profileSetting/screen/profile_settings_screen.dart';
@@ -33,7 +35,11 @@ abstract class RoutePaths {
   static const String updatePassword = '/update_password';
   static const String addIncome = '/add-income';
   static const String addExpense = '/add-expense';
+  static const String editTransaction = '/edit-transaction';
   static const String profileSettings = '/profile-settings';
+  static const String accountSetup = '/accountSetup';
+  static const String manageCategories = '/manage-categories';
+  static const String editSalary = '/edit-salary';
 }
 
 @TypedGoRoute<InitialRoute>(
@@ -47,10 +53,13 @@ abstract class RoutePaths {
     TypedGoRoute<UpdatePasswordRoute>(path: 'update_password'),
     TypedGoRoute<AddIncomeRoute>(path: 'add-income'),
     TypedGoRoute<AddExpenseRoute>(path: 'add-expense'),
+    TypedGoRoute<EditTransactionRoute>(path: 'edit-transaction'),
     TypedGoRoute<StatisticsRoute>(path: 'statistics'),
     TypedGoRoute<TransactionDetailsRoute>(path: 'transaction_details'),
     TypedGoRoute<ManageCategoriesRoute>(path: 'manage-categories'),
     TypedGoRoute<EditSalaryRoute>(path: 'edit-salary'),
+    TypedGoRoute<ProfileSettingsRoute>(path: 'profile-settings'),
+    TypedGoRoute<AccountSetupRoute>(path: 'accountSetup'),
   ],
 )
 @immutable
@@ -60,7 +69,8 @@ class InitialRoute extends GoRouteData with $InitialRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) {
     return const Scaffold(
-      body: Center(child: CircularProgressIndicator()),
+      backgroundColor: Colors.transparent,
+      body: SizedBox.shrink(),
     );
   }
 }
@@ -143,6 +153,29 @@ class ProfileSettingsRoute extends GoRouteData with $ProfileSettingsRoute {
   }
 }
 
+@TypedGoRoute<AccountSetupRoute>(path: RoutePaths.accountSetup)
+@immutable
+class AccountSetupRoute extends GoRouteData with $AccountSetupRoute {
+  final String name;
+  final String email;
+  final String password;
+
+  const AccountSetupRoute({
+    required this.name,
+    required this.email,
+    required this.password,
+  });
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    return AccountSetupScreen(
+      name: name,
+      email: email,
+      password: password,
+    );
+  }
+}
+
 @TypedGoRoute<StatisticsRoute>(path: RoutePaths.statistics)
 @immutable
 class StatisticsRoute extends GoRouteData with $StatisticsRoute {
@@ -197,7 +230,7 @@ class AddIncomeRoute extends GoRouteData with $AddIncomeRoute {
 
   @override
   Widget build(BuildContext context, GoRouterState state) {
-    return const AddIncomeScreen();
+    return const AddTransactionScreen(transactionType: TransactionType.income);
   }
 }
 
@@ -208,11 +241,23 @@ class AddExpenseRoute extends GoRouteData with $AddExpenseRoute {
 
   @override
   Widget build(BuildContext context, GoRouterState state) {
-    return const AddExpenseScreen();
+    return const AddTransactionScreen(transactionType: TransactionType.expense);
   }
 }
 
-@TypedGoRoute<ManageCategoriesRoute>(path: '/manage-categories')
+@TypedGoRoute<EditTransactionRoute>(path: RoutePaths.editTransaction)
+@immutable
+class EditTransactionRoute extends GoRouteData with $EditTransactionRoute {
+  final String transactionId;
+  const EditTransactionRoute({required this.transactionId});
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    return EditTransactionScreen(transactionId: transactionId);
+  }
+}
+
+@TypedGoRoute<ManageCategoriesRoute>(path: RoutePaths.manageCategories)
 @immutable
 class ManageCategoriesRoute extends GoRouteData with $ManageCategoriesRoute {
   const ManageCategoriesRoute();
@@ -223,7 +268,7 @@ class ManageCategoriesRoute extends GoRouteData with $ManageCategoriesRoute {
   }
 }
 
-@TypedGoRoute<EditSalaryRoute>(path: '/edit-salary')
+@TypedGoRoute<EditSalaryRoute>(path: RoutePaths.editSalary)
 @immutable
 class EditSalaryRoute extends GoRouteData with $EditSalaryRoute {
   const EditSalaryRoute();

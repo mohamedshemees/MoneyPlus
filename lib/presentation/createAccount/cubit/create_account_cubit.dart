@@ -1,14 +1,12 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:moneyplus/domain/repository/authentication_repository.dart';
 
 import '../../../domain/validator/authentication_validator.dart';
 import 'create_account_state.dart';
 
 class CreateAccountCubit extends Cubit<CreateAccountState> {
   final AuthenticationValidator _validator;
-  final AuthenticationRepository _authenticationRepository;
 
-  CreateAccountCubit(this._validator, this._authenticationRepository)
+  CreateAccountCubit(this._validator)
       : super(CreateAccountState());
 
   void emailChanged(String value) {
@@ -41,19 +39,7 @@ class CreateAccountCubit extends Cubit<CreateAccountState> {
   }
 
   Future<void> submit() async {
-    emit(state.copyWith(isLoading: true));
-    final result = await _authenticationRepository.register(
-      state.toEntity(),
-      state.password,
-    );
-    result.when(
-      onSuccess: (user) {
-        emit(state.copyWith(isLoading: false,isRegisterSuccess: true));
-      },
-      onError: (error) {
-        showSnackBar(error.message);
-      },
-    );
+    emit(state.copyWith(isRegisterSuccess: true));
   }
 
   void showSnackBar(String message) {

@@ -2,7 +2,7 @@ import 'package:moneyplus/domain/entity/transaction_category.dart';
 import 'package:moneyplus/domain/entity/transaction_type.dart';
 
 class Transaction {
-  final int id;
+  final String id;
   final double amount;
   final String currency;
   final TransactionType type;
@@ -21,7 +21,7 @@ class Transaction {
   }) : assert(amount >= 0, 'Transaction amount cannot be negative');
 
   Transaction copyWith({
-    int? id,
+    String? id,
     double? amount,
     String? currency,
     TransactionType? type,
@@ -42,15 +42,15 @@ class Transaction {
 
   factory Transaction.fromJson(Map<String, dynamic> json) {
     return Transaction(
-      id: json['id'] ?? 0,
-      amount: (json['amount'] as num).toDouble(),
-      currency: json['currency'] ?? '',
-      type: json['transaction_type'] == 'income'
-          ? TransactionType.income
-          : TransactionType.expense,
-      date: DateTime.parse(json['date']),
-      category: TransactionCategory(id: json['category_id'], name: json['category']),
-      note: json['note'] ?? '',
+      id: (json['id'] ?? '').toString(),
+      amount: (json['amount'] as num? ?? 0.0).toDouble(),
+      currency: (json['currency_abbreviation'] ?? '').toString(),
+      type: TransactionType.fromInt((json['transaction_type_id'] as num? ?? 2).toInt()),
+      date: DateTime.parse(json['date']?.toString() ?? DateTime.now().toIso8601String()).toLocal(),
+      category: json['category'] != null 
+          ? TransactionCategory.fromJson(json['category']) 
+          : TransactionCategory(id: 0, name: ''),
+      note: json['note']?.toString() ?? "",
     );
   }
 }
